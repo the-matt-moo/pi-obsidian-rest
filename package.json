@@ -1,0 +1,12 @@
+{
+  "name": "pi-obsidian-rest",
+  "version": "0.1.0",
+  "description": "Pi extension for Obsidian vault tools via Local REST API — no CLI IPC, no fragmentation crashes",
+  "license": "MIT",
+  "type": "module",
+  "extensions": "extensions/index.ts",
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  }
+}
