@@ -29,12 +29,26 @@ Add to your Pi agent settings (`~/.pi/agent/settings.json`):
 }
 ```
 
-## API Key Resolution
+## Configuration
 
-The extension resolves the REST API key in order:
+All configuration is via environment variables. None are required if Obsidian is running with the Local REST API plugin on the same machine.
 
-1. `OBSIDIAN_REST_API_KEY` environment variable
-2. Reading `apiKey` from the plugin's `data.json` config file
+| Variable | Description |
+|----------|-------------|
+| `OBSIDIAN_VAULT_PATH` | Explicit vault path. Skips auto-detection. |
+| `OBSIDIAN_REST_API_KEY` | REST API key. Skips reading from plugin config. |
+| `OBSIDIAN_PLUGIN_DATA_PATH` | Path to the plugin's `data.json`. Skips vault-based resolution. |
+
+### Auto-detection
+
+If no environment variables are set, the extension:
+
+1. Reads Obsidian's `obsidian.json` to find the currently open vault
+   - **Windows:** `%APPDATA%\obsidian\obsidian.json`
+   - **macOS:** `~/Library/Application Support/obsidian/obsidian.json`
+   - **Linux:** `$XDG_CONFIG_HOME/obsidian/obsidian.json` (defaults to `~/.config`)
+2. Locates the REST API plugin's `data.json` inside the vault's `.obsidian/plugins/` directory
+3. Reads the API key from that file
 
 ## Commands
 
@@ -64,11 +78,11 @@ obsidian run:"tags"
 obsidian run:"status"
 ```
 
-## Vault Guard
+## Security
 
-The extension registers a `tool_call` listener that blocks Pi's built-in tools (`read`, `write`, `edit`, `ls`, `find`, `grep`, `bash`) when they target the Obsidian vault path. Blocked calls return a message directing the agent to use the `obsidian` tool instead.
-
-Vault path is auto-detected from Obsidian's `obsidian.json` config (the currently open vault), with a configurable fallback.
+- **Path traversal protection:** All note paths are validated — `..` segments and absolute paths are rejected before any API call is made.
+- **Scoped TLS override:** The REST API plugin uses a self-signed certificate on localhost. TLS verification is disabled only during individual requests to `127.0.0.1`/`localhost` and restored immediately after.
+- **Vault guard:** Pi's built-in `read`, `write`, `edit`, `ls`, `find`, `grep`, and `bash` tools are blocked when they target the vault directory. The agent is redirected to use the `obsidian` tool instead.
 
 ## License
 

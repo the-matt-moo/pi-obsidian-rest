@@ -1,29 +1,35 @@
 import { readFileSync } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Type } from "@sinclair/typebox";
 
 import { ObsidianRestClient, resolveApiKey } from "./lib/rest-client.js";
 
-const PLUGIN_DATA_PATH =
-  "E:\\AI\\Obsidian\\Moo\\.obsidian\\plugins\\obsidian-local-rest-api\\data.json";
-
 const BLOCKED_TOOLS = new Set(["read", "write", "edit", "ls", "find", "grep", "bash"]);
 
-/**
- * Best-effort detection of the currently open Obsidian vault path, read from
- * Obsidian's own obsidian.json config. Falls back to the known vault path if
- * detection fails.
- */
 function detectVaultPath(): string {
-  const fallback = "E:\\AI\\Obsidian\\Moo";
-  try {
-    const configPath = path.join(
-      process.env.APPDATA ?? "",
-      "obsidian",
-      "obsidian.json"
+  const envPath = process.env.OBSIDIAN_VAULT_PATH;
+  if (envPath) return envPath;
+
+  let configDir: string;
+  const platform = process.platform;
+  if (platform === "win32") {
+    configDir = path.join(
+      process.env.APPDATA ?? path.join(os.homedir(), "AppData", "Roaming"),
+      "obsidian"
     );
-    const raw = readFileSync(configPath, "utf-8");
+  } else if (platform === "darwin") {
+    configDir = path.join(os.homedir(), "Library", "Application Support", "obsidian");
+  } else {
+    configDir = path.join(
+      process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), ".config"),
+      "obsidian"
+    );
+  }
+
+  try {
+    const raw = readFileSync(path.join(configDir, "obsidian.json"), "utf-8");
     const data = JSON.parse(raw) as {
       vaults?: Record<string, { path: string; open?: boolean }>;
     };
@@ -31,9 +37,18 @@ function detectVaultPath(): string {
     const open = vaults.find((v) => v.open) ?? vaults[0];
     if (open?.path) return open.path;
   } catch {
-    // ignore, use fallback
+    // detection failed
   }
-  return fallback;
+
+  throw new Error(
+    "Could not detect Obsidian vault path. Set OBSIDIAN_VAULT_PATH environment variable."
+  );
+}
+
+function resolvePluginDataPath(): string {
+  if (process.env.OBSIDIAN_PLUGIN_DATA_PATH) return process.env.OBSIDIAN_PLUGIN_DATA_PATH;
+  const vaultPath = detectVaultPath();
+  return path.join(vaultPath, ".obsidian", "plugins", "obsidian-local-rest-api", "data.json");
 }
 
 function normalizeForCompare(p: string): string {
@@ -47,14 +62,12 @@ function targetsVault(candidatePath: string | undefined, vaultRoot: string): boo
   return normalizedCandidate.startsWith(normalizedVault);
 }
 
-/** Extract a plausible filesystem path from a blocked tool's input. */
 function extractPathFromInput(input: Record<string, unknown>): string | undefined {
   const candidates = ["path", "file_path", "filePath", "target", "directory", "cwd"];
   for (const key of candidates) {
     const value = input[key];
     if (typeof value === "string" && value.length > 0) return value;
   }
-  if (typeof input.command === "string") return input.command;
   return undefined;
 }
 
@@ -93,7 +106,8 @@ export default function (pi: ExtensionAPI) {
   let client: ObsidianRestClient | null = null;
   function getClient(): ObsidianRestClient {
     if (!client) {
-      const apiKey = resolveApiKey(PLUGIN_DATA_PATH);
+      const dataPath = resolvePluginDataPath();
+      const apiKey = resolveApiKey(dataPath);
       client = new ObsidianRestClient(apiKey);
     }
     return client;
@@ -114,7 +128,7 @@ export default function (pi: ExtensionAPI) {
       }),
       content: Type.Optional(
         Type.String({
-          description: "Content body for write/append/prepend commands.",
+          description: "Content body for write/edit/append/prepend commands.",
         })
       ),
       vault: Type.Optional(
