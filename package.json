@@ -1,6 +1,6 @@
 {
   "name": "pi-obsidian-rest",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Pi extension for Obsidian vault tools via Local REST API — no CLI IPC, no fragmentation crashes",
   "license": "MIT",
   "type": "module",
