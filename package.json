@@ -1,10 +1,23 @@
 {
   "name": "pi-obsidian-rest",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Pi extension for Obsidian vault tools via Local REST API — no CLI IPC, no fragmentation crashes",
   "license": "MIT",
   "type": "module",
   "extensions": "extensions/index.ts",
+  "keywords": [
+    "pi-package",
+    "pi-extension",
+    "obsidian",
+    "obsidian-api",
+    "vault",
+    "notes",
+    "ai-agent"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mooreceipts/pi-obsidian-rest"
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "@sinclair/typebox": "*"
