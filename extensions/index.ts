@@ -104,7 +104,8 @@ export default function (pi: ExtensionAPI) {
     label: "Obsidian",
     description:
       "Read, write, search, and manage notes in your Obsidian vault via the Local REST API plugin (no CLI IPC). " +
-      "Commands: 'read <path>', 'write <path>' (+content), 'append <path>' (+content), 'prepend <path>' (+content), " +
+      "Commands: 'read <path>', 'write <path>' (+content), 'edit <path>' (+content, alias for write), " +
+      "'append <path>' (+content), 'prepend <path>' (+content), " +
       "'search <query>', 'list [folder]', 'delete <path>', 'tags', 'status'.",
     parameters: Type.Object({
       run: Type.String({
@@ -206,9 +207,18 @@ export default function (pi: ExtensionAPI) {
               details: {},
             };
           }
+          case "edit": {
+            if (!arg) throw new Error("Usage: edit <path> (with content param)");
+            if (content === undefined) throw new Error("edit requires a 'content' param");
+            await c.writeNote(arg, content);
+            return {
+              content: [{ type: "text", text: `Edited ${arg}` }],
+              details: {},
+            };
+          }
           default:
             throw new Error(
-              `Unknown obsidian command "${op}". Supported: read, write, append, prepend, search, list, delete, tags, status.`
+              `Unknown obsidian command "${op}". Supported: read, write, edit, append, prepend, search, list, delete, tags, status.`
             );
         }
       } catch (err) {
