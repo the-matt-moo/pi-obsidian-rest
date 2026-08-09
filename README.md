@@ -2,6 +2,10 @@
 
 Pi extension that gives AI agents safe access to your Obsidian vault through the [Local REST API](https://github.com/coddingtonbear/obsidian-local-rest-api) plugin. No CLI IPC, no fragmentation crashes.
 
+## Disclaimer
+
+Created for personal use; published for posterity, sharing, and people who need similar functionality. Caveat emptor: provided as-is, with no guarantees or warranties. I am not responsible for issues arising from anyone else's use.
+
 ## Why
 
 Pi agents with filesystem tools (`read`, `write`, `bash`) can accidentally corrupt Obsidian vaults — lock files, partial writes, encoding issues. This extension replaces direct filesystem access with HTTP calls to Obsidian's own REST API, which handles concurrency and indexing correctly.
