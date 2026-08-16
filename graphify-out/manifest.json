@@ -1,0 +1,32 @@
+{
+  "extensions/index.ts": {
+    "mtime": 1786293750.3982174,
+    "seen": 1786891158.0475228,
+    "ast_hash": "8d08a2678519f546acfaf5fac8337e26",
+    "semantic_hash": "8d08a2678519f546acfaf5fac8337e26"
+  },
+  "extensions/lib/rest-client.ts": {
+    "mtime": 1786293706.94326,
+    "seen": 1786891158.0475264,
+    "ast_hash": "6e737d8ef65b1026866c33e83d201c94",
+    "semantic_hash": "6e737d8ef65b1026866c33e83d201c94"
+  },
+  "extensions/package.json": {
+    "mtime": 1786289409.5351653,
+    "seen": 1786891158.0475278,
+    "ast_hash": "96ac218c7d3ae46194bf9bcdcbfe7ae6",
+    "semantic_hash": "96ac218c7d3ae46194bf9bcdcbfe7ae6"
+  },
+  "package.json": {
+    "mtime": 1786830713.5536966,
+    "seen": 1786891158.0475283,
+    "ast_hash": "eb7999a7b57c67dffa3680f914e84bde",
+    "semantic_hash": "eb7999a7b57c67dffa3680f914e84bde"
+  },
+  "tsconfig.json": {
+    "mtime": 1786289413.6948955,
+    "seen": 1786891158.047529,
+    "ast_hash": "21a00bc72361f7352e0b098fa78d781c",
+    "semantic_hash": "21a00bc72361f7352e0b098fa78d781c"
+  }
+}
