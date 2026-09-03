@@ -51,26 +51,6 @@ function resolvePluginDataPath(): string {
   return path.join(vaultPath, ".obsidian", "plugins", "obsidian-local-rest-api", "data.json");
 }
 
-function normalizeForCompare(p: string): string {
-  return path.resolve(p).replace(/\\/g, "/").toLowerCase();
-}
-
-function targetsVault(candidatePath: string | undefined, vaultRoot: string): boolean {
-  if (!candidatePath) return false;
-  const normalizedVault = normalizeForCompare(vaultRoot);
-  const normalizedCandidate = normalizeForCompare(candidatePath);
-  return normalizedCandidate.startsWith(normalizedVault);
-}
-
-function extractPathFromInput(input: Record<string, unknown>): string | undefined {
-  const candidates = ["path", "file_path", "filePath", "target", "directory", "cwd"];
-  for (const key of candidates) {
-    const value = input[key];
-    if (typeof value === "string" && value.length > 0) return value;
-  }
-  return undefined;
-}
-
 interface ParsedCommand {
   op: string;
   arg: string;
@@ -147,12 +127,13 @@ export default function (pi: ExtensionAPI) {
             const text = await c.readNote(arg);
             return { content: [{ type: "text", text }], details: {} };
           }
-          case "write": {
-            if (!arg) throw new Error("Usage: write <path> (with content param)");
-            if (content === undefined) throw new Error("write requires a 'content' param");
+          case "write":
+          case "edit": {
+            if (!arg) throw new Error(`Usage: ${op} <path> (with content param)`);
+            if (content === undefined) throw new Error(`${op} requires a 'content' param`);
             await c.writeNote(arg, content);
             return {
-              content: [{ type: "text", text: `Wrote ${arg}` }],
+              content: [{ type: "text", text: `${op === "edit" ? "Edited" : "Wrote"} ${arg}` }],
               details: {},
             };
           }
@@ -221,15 +202,6 @@ export default function (pi: ExtensionAPI) {
               details: {},
             };
           }
-          case "edit": {
-            if (!arg) throw new Error("Usage: edit <path> (with content param)");
-            if (content === undefined) throw new Error("edit requires a 'content' param");
-            await c.writeNote(arg, content);
-            return {
-              content: [{ type: "text", text: `Edited ${arg}` }],
-              details: {},
-            };
-          }
           default:
             throw new Error(
               `Unknown obsidian command "${op}". Supported: read, write, edit, append, prepend, search, list, delete, tags, status.`
@@ -249,10 +221,10 @@ export default function (pi: ExtensionAPI) {
     if (!BLOCKED_TOOLS.has(event.toolName)) return undefined;
 
     const input = (event.input ?? {}) as Record<string, unknown>;
+    const normalizedVault = path.resolve(vaultRoot).replace(/\\/g, "/").toLowerCase();
 
     if (event.toolName === "bash" && typeof input.command === "string") {
       const cmd = input.command;
-      const normalizedVault = normalizeForCompare(vaultRoot);
       if (cmd.replace(/\\/g, "/").toLowerCase().includes(normalizedVault) ||
           cmd.includes(".obsidian")) {
         return {
@@ -265,10 +237,20 @@ export default function (pi: ExtensionAPI) {
       return undefined;
     }
 
-    const candidatePath = extractPathFromInput(input);
+    // Extract path from input, checking multiple candidate keys
+    let candidatePath: string | undefined;
+    for (const key of ["path", "file_path", "filePath", "target", "directory", "cwd"]) {
+      const value = input[key];
+      if (typeof value === "string" && value.length > 0) {
+        candidatePath = value;
+        break;
+      }
+    }
     if (!candidatePath) return undefined;
 
-    if (targetsVault(candidatePath, vaultRoot)) {
+    // Check if candidate path targets the vault
+    const normalizedCandidate = path.resolve(candidatePath).replace(/\\/g, "/").toLowerCase();
+    if (normalizedCandidate.startsWith(normalizedVault)) {
       return {
         block: true,
         reason:
