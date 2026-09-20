@@ -18,8 +18,20 @@
     "type": "git",
     "url": "https://github.com/the-matt-moo/pi-obsidian-rest"
   },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",
     "@sinclair/typebox": "*"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "0.86.1",
+    "@sinclair/typebox": "^0.34.0",
+    "@types/node": "^22.19.0",
+    "typescript": "^5.9.3"
   }
 }
